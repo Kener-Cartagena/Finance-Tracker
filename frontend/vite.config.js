@@ -4,11 +4,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5174, // <-- El puerto libre que elegiste
-    strictPort: true, // <-- Fuerza a usar este puerto sin buscar otros
+    // Desarrollo (VS Code): frontend 5174 -> backend 8000.
+    // Ledger (iniciar.vbs) usa `npm run ledger`: frontend 3001 -> backend 8472.
+    port: 5174,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

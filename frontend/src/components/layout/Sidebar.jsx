@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import clsx from 'clsx'
+import api from '../../services/api'
 
 const navItems = [
   { to: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
@@ -29,35 +30,28 @@ export default function Sidebar() {
     )
     if (!confirmed) return
 
+    // El backend solo apaga SU propia instancia (la iniciada por iniciar.vbs).
+    // Si esta pestaña es la de desarrollo (VS Code), responde 409 y no toca nada.
     try {
-      // Llamada al endpoint de apagado del backend
-      await fetch('/api/shutdown/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Incluye token de autorización si tu API lo requiere
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}` 
-        }
-      })
+      await api.post('/api/auth/shutdown/')
     } catch (error) {
-      // Si la conexión cae inmediatamente, es normal debido al taskkill
-      console.log('Servidores apágandose...')
-    } finally {
-      // Intentar cerrar la pestaña actual
-      window.close()
-      
-      // Respaldo por si el navegador bloquea window.close()
-      setTimeout(() => {
-        document.body.innerHTML = `
-          <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#090d16; color:#a1a1aa; font-family:sans-serif;">
-            <div style="text-align:center;">
-              <h2 style="color:#f43f5e; margin-bottom:8px;">Servidores apagados</h2>
-              <p>Puedes cerrar esta pestaña de forma segura.</p>
-            </div>
-          </div>
-        `
-      }, 300)
+      const detail = error.response?.data?.detail
+      window.alert(detail || 'No se pudo apagar el sistema: el servidor no respondió.')
+      return
     }
+
+    window.close()
+    // Respaldo por si el navegador bloquea window.close()
+    setTimeout(() => {
+      document.body.innerHTML = `
+        <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#090d16; color:#a1a1aa; font-family:sans-serif;">
+          <div style="text-align:center;">
+            <h2 style="color:#f43f5e; margin-bottom:8px;">Servidores apagados</h2>
+            <p>Puedes cerrar esta pestaña de forma segura.</p>
+          </div>
+        </div>
+      `
+    }, 300)
   }
 
   return (
