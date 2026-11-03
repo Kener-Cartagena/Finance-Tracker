@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "job_name": "Local\\Ledger-2d085d34e4934597a63927b1868e7ba8",
+  "started": 1793504850.5399158,
+  "servers": {
+    "backend": {
+      "pid": 16632,
+      "ctime": 134379784505262119,
+      "exe": "C:\\Users\\kener\\Desktop\\Projects\\finance_tracker\\backend\\venv\\Scripts\\python.exe",
+      "port": 8472
+    },
+    "frontend": {
+      "pid": 22828,
+      "ctime": 134379784505336257,
+      "exe": "C:\\Windows\\System32\\cmd.exe",
+      "port": 3001
+    }
+  }
+}

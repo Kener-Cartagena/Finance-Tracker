@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #0f0f18;
+    --color-surface: #1a1a25;
+    --color-border: rgba(255,255,255,0.07);
+    --color-text: #e4e4e7;
+    --color-muted: #7e7e8e;
+    --color-accent: #10b981;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.12) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.12);
+    border-radius: 3px;
+  }
+
+  body {
+    @apply bg-obsidian-950 text-obsidian-100 font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16,185,129,0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(14,165,233,0.05), transparent);
+  }
+
+  h1, h2, h3 { @apply font-display; }
+}
+
+@layer components {
+  .card {
+    @apply bg-obsidian-900 border border-white/[0.07] rounded-2xl shadow-card;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:border-white/[0.12] hover:shadow-card-hover;
+  }
+
+  .btn-primary {
+    @apply bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-5 py-2.5 rounded-xl
+           transition-all duration-150 active:scale-95 shadow-glow-emerald;
+  }
+
+  .btn-ghost {
+    @apply bg-white/5 hover:bg-white/10 text-obsidian-200 font-medium px-5 py-2.5 rounded-xl
+           border border-white/[0.07] hover:border-white/[0.15] transition-all duration-150;
+  }
+
+  .btn-danger {
+    @apply bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-medium px-5 py-2.5 rounded-xl
+           border border-rose-500/20 transition-all duration-150;
+  }
+
+  .input {
+    @apply w-full bg-obsidian-800 border border-white/[0.08] rounded-xl px-4 py-2.5
+           text-obsidian-100 placeholder-obsidian-500 font-sans
+           focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10
+           transition-all duration-150;
+  }
+
+  .select {
+    @apply input appearance-none cursor-pointer;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-white/[0.03] transition-colors duration-100;
+  }
+
+  .stat-positive { @apply text-emerald-400; }
+  .stat-negative { @apply text-rose-400; }
+  .stat-neutral  { @apply text-sky-400; }
+
+  .section-title {
+    @apply text-lg font-display text-obsidian-100;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-obsidian-400 mb-1.5;
+  }
+}
+
+/* Page transition */
+.page-enter {
+  animation: slideUp 0.35s ease-out;
+}
+
+/* Number font */
+.font-numeric {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}

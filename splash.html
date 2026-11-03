@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <title>Cargando Sistema...</title>
+
+    <!-- Configuración HTA: Sin bordes ni barra superior -->
+    <hta:application 
+        id="oHTA" 
+        applicationname="Splash" 
+        border="none" 
+        caption="no" 
+        icon="favicon.ico" 
+        showintaskbar="yes" 
+        singleinstance="yes" 
+        sysmenu="no" 
+        scroll="no" />
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0b0e14;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: 'Consolas', 'Segoe UI', monospace;
+            border: 1px solid #1e2638;
+        }
+        .container {
+            text-align: center;
+            position: relative;
+        }
+        /* Resplandor y animación del Logo */
+        .logo-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .logo-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px; height: 110px;
+            background: radial-gradient(circle, rgba(255, 0, 76, 0.4) 0%, transparent 70%);
+            animation: pulseGlow 1.5s infinite alternate ease-in-out;
+            z-index: 1;
+        }
+        .logo {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            animation: pulseLogo 1.5s infinite alternate ease-in-out;
+        }
+        /* Barra de carga estilo neón */
+        .loader-bar {
+            width: 150px;
+            height: 3px;
+            background: #181f2e;
+            margin: 18px auto 12px;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        .loader-progress {
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff004c, #ff4d00);
+            box-shadow: 0 0 10px #ff004c;
+            position: absolute;
+            animation: moveBar 1.2s infinite ease-in-out;
+        }
+        /* Texto Tech / Cyberpunk */
+        .tech-text {
+            color: #ff004c;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(255, 0, 76, 0.6);
+            animation: blinkText 1.5s infinite ease-in-out;
+            font-weight: bold;
+        }
+
+        @keyframes pulseLogo {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+        @keyframes pulseGlow {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+            100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+        }
+        @keyframes moveBar {
+            0% { left: -40%; }
+            100% { left: 100%; }
+        }
+        @keyframes blinkText {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-wrapper">
+            <img src="logo.png" class="logo" alt="Logo" />
+        </div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+        <div class="tech-text">Cargando sistema...</div>
+    </div>
+    <script>
+        // Centrar ventana ajustando las proporciones
+        window.resizeTo(320, 240);
+        window.moveTo((screen.width - 320) / 2, (screen.height - 240) / 2);
+    </script>
+</body>
+</html>

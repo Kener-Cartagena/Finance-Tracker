@@ -1,0 +1,3 @@
+2026-10-31 21:46:11 [8852] start -> CONFLICT: Ledger no se inicio porque hay procesos ajenos en sus puertos - puerto 3001: node.exe (PID 25784). No se inicio ningun servidor y no se cerrara ese proceso. Liberelos manualmente y vuelva a abrir Ledger.
+2026-10-31 21:47:30 [21020] start: Job Local\Ledger-2d085d34e4934597a63927b1868e7ba8 raices {"backend": 16632, "frontend": 22828}
+2026-10-31 21:47:32 [21020] start -> OK: Ledger iniciado.
