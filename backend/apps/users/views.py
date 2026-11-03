@@ -199,7 +199,7 @@ class ShutdownView(APIView):
         if os.name == "nt":
             # Fuera del Job (breakaway) para sobrevivir a TerminateJobObject.
             kwargs["creationflags"] = (
-                getattr(subprocess, "DETACHED_PROCESS", 0x00000008)
+                getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)  # consola oculta (tambien para el Python real que lanza el venv)
                 | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
                 | getattr(subprocess, "CREATE_BREAKAWAY_FROM_JOB", 0x01000000)
             )

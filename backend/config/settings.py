@@ -142,9 +142,12 @@ SIMPLE_JWT = {
 }
 
 #  CORS 
+# 3001 = Ledger (iniciar.vbs, backend 8472) | 5174 = desarrollo en VS Code (backend 8000)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
 ]
 
 #  API Docs (drf-spectacular) 

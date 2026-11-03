@@ -163,6 +163,8 @@ if os.name == "nt":
     k32.OpenProcess.restype = H
     k32.CloseHandle.argtypes = [H]
     k32.CloseHandle.restype = wintypes.BOOL
+    k32.SetHandleInformation.argtypes = [H, wintypes.DWORD, wintypes.DWORD]
+    k32.SetHandleInformation.restype = wintypes.BOOL
     k32.GetCurrentProcess.argtypes = []
     k32.GetCurrentProcess.restype = H
     k32.GetProcessTimes.argtypes = [H] + [ctypes.POINTER(wintypes.FILETIME)] * 4
@@ -184,6 +186,7 @@ JobObjectBasicProcessIdList, JobObjectExtendedLimitInformation = 3, 9
 PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 ERROR_ALREADY_EXISTS, ERROR_MORE_DATA, ERROR_INSUFFICIENT_BUFFER = 183, 234, 122
 TCP_TABLE_OWNER_PID_LISTENER = 3
+HANDLE_FLAG_INHERIT = 0x1
 
 
 def _close(h) -> None:
@@ -201,6 +204,11 @@ def create_job(name: str):
     if err == ERROR_ALREADY_EXISTS:
         _close(h)
         raise OSError(err, "El Job ya existia; se aborta por seguridad")
+    # Heredable: los procesos raiz de los servidores reciben una copia del handle.
+    # Windows borra el NOMBRE de un objeto cuando no queda ningun handle abierto
+    # (aunque sigan vivos sus procesos); sin esto `stop` no encontraria el Job
+    # en cuanto este lanzador termina.
+    k32.SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)
     return h
 
 
@@ -364,7 +372,34 @@ def _conflict_message(conflicts) -> str:
             "Liberelos manualmente y vuelva a abrir Ledger.")
 
 
+def _relaunch_outside_venv_launcher():
+    """venv\\Scripts\\python.exe es un redirector que ejecuta el Python real dentro
+    de un Job con KILL_ON_JOB_CLOSE. Si el Job de Ledger se crea ahi dentro, queda
+    anidado y TODOS los servidores mueren en cuanto el redirector termina. Por eso
+    `start` se reejecuta con el interprete base (solo usa la biblioteca estandar),
+    que por SILENT_BREAKAWAY_OK nace fuera del Job del redirector.
+    Devuelve el codigo de salida del hijo, o None si no hace falta relanzar."""
+    if os.name != "nt" or os.environ.get("LEDGER_START_CHILD"):
+        return None
+    base = getattr(sys, "_base_executable", sys.executable)
+    if not base or os.path.normcase(os.path.abspath(base)) == os.path.normcase(os.path.abspath(sys.executable)):
+        return None
+    env = dict(os.environ, LEDGER_START_CHILD="1")
+    env.pop("__PYVENV_LAUNCHER__", None)
+    flags = subprocess.CREATE_NO_WINDOW
+    for extra in (subprocess.CREATE_BREAKAWAY_FROM_JOB, 0):
+        try:
+            return subprocess.run([base, str(Path(__file__).resolve()), "start"], cwd=str(ROOT),
+                                  env=env, stdin=subprocess.DEVNULL, creationflags=flags | extra).returncode
+        except OSError:
+            continue
+    return None
+
+
 def cmd_start(_args) -> int:
+    rc = _relaunch_outside_venv_launcher()
+    if rc is not None:
+        return rc
     STATE_DIR.mkdir(exist_ok=True)
     try:
         STATUS_TXT.unlink()
@@ -409,19 +444,24 @@ def cmd_start(_args) -> int:
     if not set_breakaway_ok(hjob) or not assign_current_process(hjob):
         return _finish(EXIT_ERROR, "No se pudo configurar el Job Object (Windows 10 o superior requerido).", "ERROR")
 
-    env = dict(os.environ, LEDGER_HOME=str(ROOT), LEDGER_JOB_NAME=job_name)
+    # VITE_API_URL del entorno tiene prioridad sobre frontend/.env (que apunta al
+    # backend de desarrollo :8000): asi el frontend de Ledger usa SU backend.
+    env = dict(os.environ, LEDGER_HOME=str(ROOT), LEDGER_JOB_NAME=job_name,
+               VITE_API_URL=f"http://127.0.0.1:{BACKEND_PORT}")
     specs = [
         ("backend", [str(VENV_PYTHON), "manage.py", "runserver", f"127.0.0.1:{BACKEND_PORT}"],
          ROOT / "backend", BACKEND_PORT),
-        ("frontend", ["cmd.exe", "/d", "/c", "npm", "run", "dev"], ROOT / "frontend", FRONTEND_PORT),
+        ("frontend", ["cmd.exe", "/d", "/c", "npm", "run", "ledger"], ROOT / "frontend", FRONTEND_PORT),
     ]
     procs = []
     try:
         for name, cmd, cwd, port in specs:
             with open(STATE_DIR / f"{name}.log", "wb") as lf:
+                si = subprocess.STARTUPINFO()
+                si.lpAttributeList = {"handle_list": [hjob]}   # solo hereda el Job
                 p = subprocess.Popen(cmd, cwd=str(cwd), env=env, stdin=subprocess.DEVNULL,
-                                     stdout=lf, stderr=subprocess.STDOUT,
-                                     creationflags=subprocess.CREATE_NO_WINDOW)
+                                     stdout=lf, stderr=subprocess.STDOUT, startupinfo=si,
+                                     close_fds=True, creationflags=subprocess.CREATE_NO_WINDOW)
             procs.append((name, p, port))
     except OSError as e:
         return _abort(hjob, EXIT_ERROR, "ERROR", f"No se pudo lanzar {specs[len(procs)][0]}: {e}")
