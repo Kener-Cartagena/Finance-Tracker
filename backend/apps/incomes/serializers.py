@@ -1,8 +1,10 @@
 from rest_framework import serializers
+
+from apps.accounts.fields import MoneyRecordSerializerMixin
 from .models import Income
 
 
-class IncomeSerializer(serializers.ModelSerializer):
+class IncomeSerializer(MoneyRecordSerializerMixin, serializers.ModelSerializer):
     """
     Full serializer for list / retrieve / create / update.
     The `user` field is read-only and injected by the view's perform_create.
@@ -10,7 +12,7 @@ class IncomeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Income
-        fields = ("id", "amount", "source", "date", "notes", "created_at")
+        fields = ("id", "amount", "source", "date", "notes", "created_at") + MoneyRecordSerializerMixin.MONEY_FIELDS
         read_only_fields = ("id", "created_at")
 
     def validate_amount(self, value):

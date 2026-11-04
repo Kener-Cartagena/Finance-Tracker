@@ -28,7 +28,7 @@ class IncomeViewSet(viewsets.ModelViewSet):
         Always scope to the requesting user.
         This is the single most important security line in the app.
         """
-        return Income.objects.filter(user=self.request.user)
+        return Income.objects.filter(user=self.request.user).select_related("account")
 
     def perform_create(self, serializer):
         """Inject the authenticated user before saving."""

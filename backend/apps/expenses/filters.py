@@ -10,4 +10,4 @@ class ExpenseFilter(django_filters.FilterSet):
 
     class Meta:
         model = Expense
-        fields = ["date_after", "date_before", "category", "description"]
+        fields = ["date_after", "date_before", "category", "description", "currency", "account"]

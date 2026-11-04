@@ -48,9 +48,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "last_name",
             "full_name",
             "currency",
+            "exchange_rate",
             "date_joined",
         )
         read_only_fields = ("id", "email", "date_joined")
+
+    def validate_exchange_rate(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("La tasa de cambio debe ser mayor que 0.")
+        return value
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -47,6 +47,8 @@ LOCAL_APPS = [
     "apps.expenses",
     "apps.goals",
     "apps.investments",
+    "apps.accounts",
+    "apps.planning",
     "apps.dashboard",
 ]
 

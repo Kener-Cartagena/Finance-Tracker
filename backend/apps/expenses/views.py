@@ -23,7 +23,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     ordering = ["-date"]
 
     def get_queryset(self):
-        return Expense.objects.filter(user=self.request.user)
+        return Expense.objects.filter(user=self.request.user).select_related("account")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

@@ -41,6 +41,7 @@ class GoalContributionService:
                 category='other',
                 description=f'Goal: {goal.name}',
                 date=date,
+                exchange_rate=goal.user.exchange_rate,
             )
 
         return contribution, goal

@@ -19,6 +19,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     currency = models.CharField(max_length=10, default="USD")
+    # Lempiras per US dollar. Used as the default rate for new USD records
+    # and to value USD account balances in lempiras.
+    exchange_rate = models.DecimalField(max_digits=10, decimal_places=4, default=26)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

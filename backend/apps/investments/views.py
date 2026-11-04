@@ -16,7 +16,7 @@ class InvestmentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Investment
-        fields = ["date_after", "date_before", "investment_type", "platform"]
+        fields = ["date_after", "date_before", "investment_type", "platform", "currency", "account"]
 
 
 class InvestmentViewSet(viewsets.ModelViewSet):
@@ -34,7 +34,7 @@ class InvestmentViewSet(viewsets.ModelViewSet):
     ordering = ["-date"]
 
     def get_queryset(self):
-        return Investment.objects.filter(user=self.request.user)
+        return Investment.objects.filter(user=self.request.user).select_related("account")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

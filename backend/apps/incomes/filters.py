@@ -9,4 +9,4 @@ class IncomeFilter(django_filters.FilterSet):
 
     class Meta:
         model = Income
-        fields = ["date_after", "date_before", "source"]
+        fields = ["date_after", "date_before", "source", "currency", "account"]

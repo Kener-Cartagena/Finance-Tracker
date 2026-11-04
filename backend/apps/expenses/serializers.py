@@ -1,8 +1,10 @@
 from rest_framework import serializers
+
+from apps.accounts.fields import MoneyRecordSerializerMixin
 from .models import Expense, ExpenseCategory
 
 
-class ExpenseSerializer(serializers.ModelSerializer):
+class ExpenseSerializer(MoneyRecordSerializerMixin, serializers.ModelSerializer):
     category_display = serializers.CharField(
         source="get_category_display", read_only=True
     )
@@ -17,7 +19,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "description",
             "date",
             "created_at",
-        )
+        ) + MoneyRecordSerializerMixin.MONEY_FIELDS
         read_only_fields = ("id", "created_at", "category_display")
 
     def validate_amount(self, value):

@@ -1,22 +1,26 @@
 from django.conf import settings
 from django.db import models
 
+from apps.accounts.currency import Currency, DEFAULT_EXCHANGE_RATE
+
 
 class ExpenseCategory(models.TextChoices):
-    UNIVERSITY      = "university",     "University"
+    UNIVERSITY      = "university",     "Universidad"
     INTERNET        = "internet",       "Internet"
-    TRANSPORT       = "transport",      "Transport"
-    GASOLINE        = "gasoline",       "Gasoline"
-    FOOD            = "food",           "Food"
-    PERSONAL_CARE   = "personal_care",  "Personal Care"
-    CLOTHING        = "clothing",       "Clothing"
-    GIFTS           = "gifts",          "Gifts"
-    FAMILY          = "family",         "Family"
-    ENTERTAINMENT   = "entertainment",  "Entertainment"
-    HEALTH          = "health",         "Health"
-    SUBSCRIPTIONS   = "subscriptions",  "Subscriptions"
-    HOUSING         = "housing",        "Housing"
-    OTHER           = "other",          "Other"
+    TRANSPORT       = "transport",      "Transporte"
+    GASOLINE        = "gasoline",       "Gasolina"
+    FOOD            = "food",           "Comida"
+    PERSONAL_CARE   = "personal_care",  "Cuidado personal"
+    CLOTHING        = "clothing",       "Ropa"
+    GIFTS           = "gifts",          "Regalos"
+    FAMILY          = "family",         "Familia"
+    ENTERTAINMENT   = "entertainment",  "Diversión"
+    HEALTH          = "health",         "Salud"
+    SUBSCRIPTIONS   = "subscriptions",  "Suscripciones"
+    HOUSING         = "housing",        "Hogar"
+    REPAIRS         = "repairs",        "Reparaciones"
+    EMERGENCY       = "emergency",      "Emergencia"
+    OTHER           = "other",          "Otro"
 
 
 class Expense(models.Model):
@@ -35,6 +39,18 @@ class Expense(models.Model):
         db_index=True,
     )
     amount = models.DecimalField(max_digits=14, decimal_places=2)
+    currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.HNL)
+    exchange_rate = models.DecimalField(
+        max_digits=10, decimal_places=4, default=DEFAULT_EXCHANGE_RATE,
+        help_text="Lempiras por dólar al momento del registro.",
+    )
+    account = models.ForeignKey(
+        "accounts.Account",
+        on_delete=models.PROTECT,
+        related_name="expenses",
+        null=True,
+        blank=True,
+    )
     category = models.CharField(
         max_length=30,
         choices=ExpenseCategory.choices,
