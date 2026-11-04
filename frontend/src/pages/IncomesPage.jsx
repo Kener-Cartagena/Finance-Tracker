@@ -1,5 +1,5 @@
 /**
- * IncomesPage — full CRUD for income records.
+ * IncomesPage — CRUD de ingresos, en dólares o lempiras, con cuenta y filtro de fechas.
  */
 
 import { useEffect, useState, useCallback } from 'react'
@@ -11,43 +11,55 @@ import Modal from '../components/ui/Modal'
 import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
 import { PageSpinner } from '../components/ui/Spinner'
+import DateRangeFilter from '../components/ui/DateRangeFilter'
+import MoneyFields, { emptyMoney, moneyFromRecord, moneyPayload } from '../components/ui/MoneyFields'
+import { useAuth } from '../context/AuthContext'
+import { useAccounts } from '../hooks/useAccounts'
 import { formatCurrency, formatDate } from '../utils/format'
+import { presetRange, todayISO } from '../utils/dates'
 
-const EMPTY_FORM = { amount: '', source: '', date: '', notes: '' }
+const emptyForm = (rate) => ({ amount: '', source: '', date: todayISO(), notes: '', ...emptyMoney(rate) })
 
 export default function IncomesPage() {
+  const { user } = useAuth()
+  const { accounts } = useAccounts()
   const [incomes, setIncomes]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState(null)
-  const [form, setForm]         = useState(EMPTY_FORM)
+  const [form, setForm]         = useState(() => emptyForm(user?.exchange_rate))
   const [formErrors, setFormErrors] = useState({})
   const [saving, setSaving]     = useState(false)
   const [search, setSearch]     = useState('')
   const [deleting, setDeleting] = useState(null)
+  const [range, setRange]       = useState(() => ({ preset: 'month', ...presetRange('month') }))
 
-  const load = useCallback(async (params = {}) => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await incomeService.list(params)
+      const data = await incomeService.list({
+        page_size: 100,
+        date_after: range.date_from || undefined,
+        date_before: range.date_to || undefined,
+      })
       setIncomes(data.results || data)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [range.date_from, range.date_to])
 
   useEffect(() => { load() }, [load])
 
   const openCreate = () => {
     setEditing(null)
-    setForm(EMPTY_FORM)
+    setForm(emptyForm(user?.exchange_rate))
     setFormErrors({})
     setModal(true)
   }
 
   const openEdit = (item) => {
     setEditing(item)
-    setForm({ amount: item.amount, source: item.source, date: item.date, notes: item.notes || '' })
+    setForm({ amount: item.amount, source: item.source, date: item.date, notes: item.notes || '', ...moneyFromRecord(item) })
     setFormErrors({})
     setModal(true)
   }
@@ -58,13 +70,14 @@ export default function IncomesPage() {
     e.preventDefault()
     setSaving(true)
     setFormErrors({})
+    const payload = { amount: form.amount, source: form.source, date: form.date, notes: form.notes, ...moneyPayload(form) }
     try {
       if (editing) {
-        const updated = await incomeService.update(editing.id, form)
+        const updated = await incomeService.update(editing.id, payload)
         setIncomes(p => p.map(i => i.id === editing.id ? updated : i))
       } else {
-        const created = await incomeService.create(form)
-        setIncomes(p => [created, ...p])
+        await incomeService.create(payload)
+        await load()
       }
       setModal(false)
     } catch (err) {
@@ -75,6 +88,7 @@ export default function IncomesPage() {
   }
 
   const handleDelete = async (id) => {
+    if (!window.confirm('¿Eliminar este ingreso?')) return
     setDeleting(id)
     try {
       await incomeService.remove(id)
@@ -88,31 +102,46 @@ export default function IncomesPage() {
     i.source.toLowerCase().includes(search.toLowerCase())
   )
 
-  const totalVisible = filtered.reduce((sum, i) => sum + parseFloat(i.amount), 0)
+  const totals = filtered.reduce((acc, i) => {
+    acc.hnl += parseFloat(i.amount_hnl)
+    acc[i.currency] += parseFloat(i.amount)
+    return acc
+  }, { hnl: 0, USD: 0, HNL: 0 })
+
+  const formAccounts = accounts.filter(a => !a.is_archived || String(a.id) === String(form.account))
 
   return (
     <div>
       <PageHeader
-        title="Income"
-        subtitle="Track all your income sources"
-        action={<Button onClick={openCreate}><Plus size={15} /> Add Income</Button>}
+        title="Ingresos"
+        subtitle="Todo lo que entra, en dólares o en lempiras"
+        action={<Button onClick={openCreate}><Plus size={15} /> Agregar ingreso</Button>}
       />
 
+      <div className="mb-4">
+        <DateRangeFilter value={range} onChange={setRange} />
+      </div>
+
       {/* Filter bar */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-obsidian-500" />
           <input
             className="input pl-9 text-sm py-2"
-            placeholder="Search by source…"
+            placeholder="Buscar por fuente…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         {filtered.length > 0 && (
-          <span className="text-sm text-obsidian-400">
-            Total: <span className="font-numeric text-emerald-400">{formatCurrency(totalVisible)}</span>
-          </span>
+          <div className="text-sm text-obsidian-400 ml-auto text-right">
+            Total: <span className="font-numeric text-emerald-400">{formatCurrency(totals.hnl)}</span>
+            {totals.USD > 0 && (
+              <span className="block text-xs text-obsidian-500 font-numeric">
+                {formatCurrency(totals.USD, 'USD')} + {formatCurrency(totals.HNL)}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -123,15 +152,15 @@ export default function IncomesPage() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={TrendingUp}
-            title="No income recorded"
-            description="Start by adding your first income entry."
-            action={<Button onClick={openCreate} size="sm"><Plus size={14} /> Add Income</Button>}
+            title="No hay ingresos en este rango"
+            description="Agrega un ingreso o cambia el filtro de fechas."
+            action={<Button onClick={openCreate} size="sm"><Plus size={14} /> Agregar ingreso</Button>}
           />
         ) : (
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                {['Source', 'Amount', 'Date', 'Notes', ''].map(h => (
+                {['Fuente', 'Monto', 'Cuenta', 'Fecha', 'Notas', ''].map(h => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-medium text-obsidian-500 uppercase tracking-wider">
                     {h}
                   </th>
@@ -151,21 +180,26 @@ export default function IncomesPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <span className="font-numeric text-sm text-emerald-400">
-                      +{formatCurrency(item.amount)}
+                      +{formatCurrency(item.amount, item.currency)}
                     </span>
+                    {item.currency === 'USD' && (
+                      <span className="block text-xs text-obsidian-500 font-numeric">≈ {formatCurrency(item.amount_hnl)}</span>
+                    )}
                   </td>
+                  <td className="px-5 py-3.5 text-sm text-obsidian-400">{item.account_name || '—'}</td>
                   <td className="px-5 py-3.5 text-sm text-obsidian-400">{formatDate(item.date)}</td>
                   <td className="px-5 py-3.5 text-sm text-obsidian-500 max-w-xs truncate">
                     {item.notes || '—'}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                      <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg hover:bg-white/10 text-obsidian-400 hover:text-white transition-colors">
+                      <button onClick={() => openEdit(item)} title="Editar" className="p-1.5 rounded-lg hover:bg-white/10 text-obsidian-400 hover:text-white transition-colors">
                         <Pencil size={13} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
                         disabled={deleting === item.id}
+                        title="Eliminar"
                         className="p-1.5 rounded-lg hover:bg-rose-500/10 text-obsidian-400 hover:text-rose-400 transition-colors"
                       >
                         {deleting === item.id
@@ -186,56 +220,60 @@ export default function IncomesPage() {
       <Modal
         open={modal}
         onClose={() => setModal(false)}
-        title={editing ? 'Edit Income' : 'Add Income'}
+        title={editing ? 'Editar ingreso' : 'Agregar ingreso'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Source"
+            label="Fuente"
             name="source"
             value={form.source}
             onChange={handleChange}
-            placeholder="e.g. Salary, Freelance"
+            placeholder="Ej. Salario, Freelance"
             error={formErrors.source?.[0]}
             required
           />
-          <Input
-            label="Amount"
-            name="amount"
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={form.amount}
-            onChange={handleChange}
-            placeholder="0.00"
-            error={formErrors.amount?.[0]}
-            required
-          />
-          <Input
-            label="Date"
-            name="date"
-            type="date"
-            value={form.date}
-            onChange={handleChange}
-            error={formErrors.date?.[0]}
-            required
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Monto"
+              name="amount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={form.amount}
+              onChange={handleChange}
+              placeholder="0.00"
+              error={formErrors.amount?.[0]}
+              required
+            />
+            <Input
+              label="Fecha"
+              name="date"
+              type="date"
+              value={form.date}
+              onChange={handleChange}
+              error={formErrors.date?.[0]}
+              required
+            />
+          </div>
+          <MoneyFields form={form} setForm={setForm} accounts={formAccounts} errors={formErrors} amount={form.amount} />
           <div>
-            <label className="label">Notes <span className="text-obsidian-600">(optional)</span></label>
+            <label className="label">Notas <span className="text-obsidian-600">(opcional)</span></label>
             <textarea
               name="notes"
               value={form.notes}
               onChange={handleChange}
               className="input resize-none"
               rows={2}
-              placeholder="Any additional notes…"
+              placeholder="Notas adicionales…"
             />
           </div>
+          {formErrors.non_field_errors?.[0] && <p className="text-rose-400 text-xs">{formErrors.non_field_errors[0]}</p>}
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => setModal(false)} className="flex-1 justify-center">
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" loading={saving} className="flex-1 justify-center">
-              {editing ? 'Save Changes' : 'Add Income'}
+              {editing ? 'Guardar cambios' : 'Agregar ingreso'}
             </Button>
           </div>
         </form>

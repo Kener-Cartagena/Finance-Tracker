@@ -12,7 +12,7 @@ const CustomTooltip = ({ active, payload }) => {
     <div className="card px-3 py-2 text-xs">
       <p className="font-medium text-obsidian-100">{d.name}</p>
       <p className="text-emerald-400 font-numeric">{formatCurrency(d.value)}</p>
-      <p className="text-obsidian-400">{d.payload.count} transactions</p>
+      <p className="text-obsidian-400">{d.payload.count} gastos</p>
     </div>
   )
 }
@@ -20,7 +20,7 @@ const CustomTooltip = ({ active, payload }) => {
 export default function ExpensePieChart({ data = [] }) {
   if (!data.length) return (
     <div className="flex items-center justify-center h-48 text-obsidian-500 text-sm">
-      No expense data yet
+      Sin gastos en este rango
     </div>
   )
 

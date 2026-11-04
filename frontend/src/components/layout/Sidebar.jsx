@@ -1,18 +1,21 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, TrendingUp, TrendingDown, Target,
-  LineChart, LogOut, Power
+  LineChart, LogOut, Power, ClipboardList, CalendarClock, Wallet
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import clsx from 'clsx'
 import api from '../../services/api'
 
 const navItems = [
-  { to: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
-  { to: '/incomes',     label: 'Income',       icon: TrendingUp },
-  { to: '/expenses',    label: 'Expenses',     icon: TrendingDown },
-  { to: '/goals',       label: 'Goals',        icon: Target },
-  { to: '/investments', label: 'Investments',  icon: LineChart },
+  { to: '/dashboard',   label: 'Dashboard',        icon: LayoutDashboard },
+  { to: '/plan',        label: 'Plan de gastos',   icon: ClipboardList },
+  { to: '/accounts',    label: 'Cuentas',          icon: Wallet },
+  { to: '/incomes',     label: 'Ingresos',         icon: TrendingUp },
+  { to: '/expenses',    label: 'Gastos',           icon: TrendingDown },
+  { to: '/upcoming',    label: 'Gastos próximos',  icon: CalendarClock },
+  { to: '/goals',       label: 'Metas',            icon: Target },
+  { to: '/investments', label: 'Inversiones',      icon: LineChart },
 ]
 
 export default function Sidebar() {
@@ -114,7 +117,7 @@ export default function Sidebar() {
                      transition-all duration-150"
         >
           <LogOut size={14} />
-          Sign out
+          Cerrar sesión
         </button>
 
         {/* Apagar Sistema Completo */}

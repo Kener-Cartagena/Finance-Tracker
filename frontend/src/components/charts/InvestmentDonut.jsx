@@ -15,7 +15,7 @@ const CustomTooltip = ({ active, payload }) => {
 export default function InvestmentDonut({ data = [] }) {
   if (!data.length) return (
     <div className="flex items-center justify-center h-40 text-obsidian-500 text-sm">
-      No investments yet
+      Sin inversiones en este rango
     </div>
   )
 

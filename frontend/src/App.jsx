@@ -8,6 +8,9 @@ import IncomesPage from './pages/IncomesPage'
 import ExpensesPage from './pages/ExpensesPage'
 import GoalsPage from './pages/GoalsPage'
 import InvestmentsPage from './pages/InvestmentsPage'
+import AccountsPage from './pages/AccountsPage'
+import PlanPage from './pages/PlanPage'
+import UpcomingPage from './pages/UpcomingPage'
 import SingleTabGuard from './components/ui/SingleTabGuard' 
 
 export default function App() {
@@ -26,6 +29,9 @@ export default function App() {
             <Route path="/expenses"    element={<ExpensesPage />} />
             <Route path="/goals"       element={<GoalsPage />} />
             <Route path="/investments" element={<InvestmentsPage />} />
+            <Route path="/plan"        element={<PlanPage />} />
+            <Route path="/upcoming"    element={<UpcomingPage />} />
+            <Route path="/accounts"    element={<AccountsPage />} />
           </Route>
 
           {/* Default redirect */}

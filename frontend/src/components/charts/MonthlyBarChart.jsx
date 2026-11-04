@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function MonthlyBarChart({ data = [] }) {
   if (!data.length) return (
     <div className="flex items-center justify-center h-48 text-obsidian-500 text-sm">
-      No monthly data yet
+      Sin datos en este rango
     </div>
   )
 
@@ -44,7 +44,7 @@ export default function MonthlyBarChart({ data = [] }) {
           tickLine={false}
         />
         <YAxis
-          tickFormatter={formatShort}
+          tickFormatter={(v) => formatShort(v)}
           tick={{ fill: '#5c5c6d', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
@@ -56,9 +56,9 @@ export default function MonthlyBarChart({ data = [] }) {
           iconSize={8}
           formatter={(v) => <span className="text-xs text-obsidian-400 capitalize">{v}</span>}
         />
-        <Bar dataKey="income"   fill="#10b981" radius={[4,4,0,0]} maxBarSize={32} />
-        <Bar dataKey="expenses" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={32} />
-        <Line dataKey="savings" stroke="#38bdf8" strokeWidth={2} dot={false} />
+        <Bar dataKey="income"   name="Ingresos" fill="#10b981" radius={[4,4,0,0]} maxBarSize={32} />
+        <Bar dataKey="expenses" name="Gastos" fill="#f43f5e" radius={[4,4,0,0]} maxBarSize={32} />
+        <Line dataKey="savings" name="Ahorro" stroke="#38bdf8" strokeWidth={2} dot={false} />
       </ComposedChart>
     </ResponsiveContainer>
   )

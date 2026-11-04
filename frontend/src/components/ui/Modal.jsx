@@ -24,7 +24,7 @@ export default function Modal({ open, onClose, title, children, width = 'max-w-m
       />
 
       {/* Panel */}
-      <div className={`relative card w-full ${width} p-6 animate-slide-up z-10`}>
+      <div className={`relative card w-full ${width} p-6 animate-slide-up z-10 max-h-[90vh] overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-display text-obsidian-100">{title}</h2>

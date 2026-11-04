@@ -12,17 +12,23 @@ import Input, { Select } from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
 import { PageSpinner } from '../components/ui/Spinner'
 import { CategoryBadge } from '../components/ui/Badge'
+import MoneyFields, { emptyMoney, moneyFromRecord, moneyPayload } from '../components/ui/MoneyFields'
+import { useAuth } from '../context/AuthContext'
+import { useAccounts } from '../hooks/useAccounts'
 import { formatCurrency, formatDate, INVESTMENT_COLORS } from '../utils/format'
+import { todayISO } from '../utils/dates'
 
-const EMPTY_FORM = { amount: '', investment_type: 'stocks', platform: '', date: '', notes: '' }
+const emptyForm = (rate) => ({ amount: '', investment_type: 'stocks', platform: '', date: todayISO(), notes: '', ...emptyMoney(rate) })
 
 export default function InvestmentsPage() {
+  const { user } = useAuth()
+  const { accounts } = useAccounts()
   const [investments, setInvestments] = useState([])
   const [types, setTypes]       = useState([])
   const [loading, setLoading]   = useState(true)
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState(null)
-  const [form, setForm]         = useState(EMPTY_FORM)
+  const [form, setForm]         = useState(() => emptyForm(user?.exchange_rate))
   const [errors, setErrors]     = useState({})
   const [saving, setSaving]     = useState(false)
   const [deleting, setDeleting] = useState(null)
@@ -31,7 +37,7 @@ export default function InvestmentsPage() {
     setLoading(true)
     try {
       const [invData, typesData] = await Promise.all([
-        investmentService.list(),
+        investmentService.list({ page_size: 100 }),
         investmentService.getTypes(),
       ])
       setInvestments(invData.results || invData)
@@ -45,14 +51,14 @@ export default function InvestmentsPage() {
 
   const openCreate = () => {
     setEditing(null)
-    setForm(EMPTY_FORM)
+    setForm(emptyForm(user?.exchange_rate))
     setErrors({})
     setModal(true)
   }
 
   const openEdit = (item) => {
     setEditing(item)
-    setForm({ amount: item.amount, investment_type: item.investment_type, platform: item.platform, date: item.date, notes: item.notes || '' })
+    setForm({ amount: item.amount, investment_type: item.investment_type, platform: item.platform, date: item.date, notes: item.notes || '', ...moneyFromRecord(item) })
     setErrors({})
     setModal(true)
   }
@@ -63,12 +69,16 @@ export default function InvestmentsPage() {
     e.preventDefault()
     setSaving(true)
     setErrors({})
+    const payload = {
+      amount: form.amount, investment_type: form.investment_type, platform: form.platform,
+      date: form.date, notes: form.notes, ...moneyPayload(form),
+    }
     try {
       if (editing) {
-        const updated = await investmentService.update(editing.id, form)
+        const updated = await investmentService.update(editing.id, payload)
         setInvestments(p => p.map(i => i.id === editing.id ? updated : i))
       } else {
-        const created = await investmentService.create(form)
+        const created = await investmentService.create(payload)
         setInvestments(p => [created, ...p])
       }
       setModal(false)
@@ -89,7 +99,8 @@ export default function InvestmentsPage() {
     }
   }
 
-  const total = investments.reduce((s, i) => s + parseFloat(i.amount), 0)
+  const total = investments.reduce((s, i) => s + parseFloat(i.amount_hnl), 0)
+  const formAccounts = accounts.filter(a => !a.is_archived || String(a.id) === String(form.account))
 
   return (
     <div>
@@ -110,7 +121,7 @@ export default function InvestmentsPage() {
           <div className="flex flex-wrap gap-4">
             {Object.entries(
               investments.reduce((acc, i) => {
-                acc[i.investment_type] = (acc[i.investment_type] || 0) + parseFloat(i.amount)
+                acc[i.investment_type] = (acc[i.investment_type] || 0) + parseFloat(i.amount_hnl)
                 return acc
               }, {})
             ).map(([type, amt]) => {
@@ -161,7 +172,11 @@ export default function InvestmentsPage() {
                     </td>
                     <td className="px-5 py-3.5 text-sm text-obsidian-200">{item.platform}</td>
                     <td className="px-5 py-3.5">
-                      <span className="font-numeric text-sm text-sky-400">{formatCurrency(item.amount)}</span>
+                      <span className="font-numeric text-sm text-sky-400">{formatCurrency(item.amount, item.currency)}</span>
+                      {item.currency === 'USD' && (
+                        <span className="block text-xs text-obsidian-500 font-numeric">≈ {formatCurrency(item.amount_hnl)}</span>
+                      )}
+                      {item.account_name && <span className="block text-xs text-obsidian-500">desde {item.account_name}</span>}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-obsidian-400">{formatDate(item.date)}</td>
                     <td className="px-5 py-3.5 text-sm text-obsidian-500 max-w-xs truncate">
@@ -235,6 +250,7 @@ export default function InvestmentsPage() {
             error={errors.date?.[0]}
             required
           />
+          <MoneyFields form={form} setForm={setForm} accounts={formAccounts} errors={errors} amount={form.amount} />
           <div>
             <label className="label">Notes <span className="text-obsidian-600">(optional)</span></label>
             <input name="notes" value={form.notes} onChange={handleChange} className="input" placeholder="e.g. AAPL, BTC" />
