@@ -1,3 +1,5 @@
 # Estado en tiempo de ejecucion de Ledger (logs, registro del Job)
 .ledger/
 __pycache__/
+
+frontend/node_modules/.vite/
