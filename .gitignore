@@ -2,4 +2,6 @@
 .ledger/
 __pycache__/
 
-frontend/node_modules/.vite/
+# Dependencias y build del frontend (se regeneran con npm install / npm run build)
+node_modules/
+frontend/dist/

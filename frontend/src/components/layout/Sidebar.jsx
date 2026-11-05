@@ -61,7 +61,7 @@ export default function Sidebar() {
     <aside className="w-60 flex-shrink-0 h-screen sticky top-0 flex flex-col
                       bg-obsidian-950 border-r border-white/[0.06] px-4 py-6">
       {/* Logo */}
-      <div className="group flex items-center gap-2.5 px-2 mb-8 cursor-pointer"
+      <div className="group flex-shrink-0 flex items-center gap-2.5 px-2 mb-8 cursor-pointer"
           onClick={() => navigate('/dashboard')}>
         <div className="logo-wrap relative w-9 h-9">
           {/* Resplandor pulsante detrás */}
@@ -82,7 +82,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1">
+      <nav className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1 -mx-1 px-1">
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -103,7 +103,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User footer & Controles de Sesión / Sistema */}
-      <div className="border-t border-white/[0.06] pt-4 mt-4 space-y-1">
+      <div className="flex-shrink-0 border-t border-white/[0.06] pt-4 mt-4 space-y-1">
         <div className="px-2 mb-3">
           <p className="text-xs font-medium text-obsidian-300 truncate">{user?.full_name || user?.email}</p>
           <p className="text-xs text-obsidian-500 truncate">{user?.email}</p>
