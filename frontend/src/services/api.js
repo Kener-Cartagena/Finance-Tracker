@@ -65,6 +65,9 @@ api.interceptors.response.use(
           refresh: refreshToken,
         })
         localStorage.setItem('access_token', data.access)
+        // ROTATE_REFRESH_TOKENS: el backend devuelve un refresh nuevo y el
+        // anterior queda en la blacklist, asi que hay que guardarlo.
+        if (data.refresh) localStorage.setItem('refresh_token', data.refresh)
         api.defaults.headers.common.Authorization = `Bearer ${data.access}`
         processQueue(null, data.access)
         originalRequest.headers.Authorization = `Bearer ${data.access}`
