@@ -1,21 +1,54 @@
 version: 2
+
+# Los saltos de version mayor (Django 5/6, React 19, Vite 8, Pillow 13...) se
+# ignoran: rompen compatibilidad y se hacen a mano en un PR dedicado.
+# Todo lo demas llega agrupado: 1 PR de versiones + 1 de seguridad por ecosistema.
+
 updates:
   - package-ecosystem: pip
     directory: /backend
     schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
-      python: { patterns: ["*"], update-types: [minor, patch] }
+      python:
+        applies-to: version-updates
+        patterns: ["*"]
+      python-security:
+        applies-to: security-updates
+        patterns: ["*"]
 
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
-      npm: { patterns: ["*"], update-types: [minor, patch] }
+      npm:
+        applies-to: version-updates
+        patterns: ["*"]
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
 
   - package-ecosystem: docker
     directories: [/backend, /frontend]
     schedule: { interval: weekly }
+    ignore:
+      # Django 4.2 soporta hasta Python 3.12: subir Python va junto con subir Django
+      - dependency-name: python
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+    groups:
+      docker:
+        patterns: ["*"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
+    groups:
+      actions:
+        patterns: ["*"]
