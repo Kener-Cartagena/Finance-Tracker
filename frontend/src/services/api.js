@@ -10,7 +10,8 @@
 
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// `??` (no `||`): VITE_API_URL="" en Docker significa "mismo origen" (nginx hace proxy de /api)
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 const api = axios.create({
   baseURL: BASE_URL,

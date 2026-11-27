@@ -1,0 +1,64 @@
+# Stack completo: MySQL + Django (gunicorn) + React (nginx).
+#
+#   cp .env.example .env    # y rellena los valores
+#   docker compose up -d --build
+#   -> http://localhost:8080   (APP_PORT)
+#
+# No choca con el entorno de desarrollo (8000/5174) ni con Ledger (8472/3001):
+# MySQL no publica puertos al host y la app usa APP_PORT.
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-finance_tracker}
+      MYSQL_USER: ${DB_USER:-finance}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Define DB_ROOT_PASSWORD en .env}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # Por TCP (127.0.0.1): durante la inicialización MySQL solo escucha por socket,
+      # así el check no da "healthy" antes de tiempo.
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    image: ${BACKEND_IMAGE:-finance-tracker-backend:local}
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Define SECRET_KEY en .env}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8080}
+      CORS_EXTRA_ORIGINS: ${CORS_EXTRA_ORIGINS:-}
+      DB_NAME: ${DB_NAME:-finance_tracker}
+      DB_USER: ${DB_USER:-finance}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: "3306"
+      ACCESS_TOKEN_LIFETIME_MINUTES: ${ACCESS_TOKEN_LIFETIME_MINUTES:-60}
+      REFRESH_TOKEN_LIFETIME_DAYS: ${REFRESH_TOKEN_LIFETIME_DAYS:-7}
+      DJANGO_MIGRATE: ${DJANGO_MIGRATE:-1}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    image: ${FRONTEND_IMAGE:-finance-tracker-frontend:local}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db_data:
