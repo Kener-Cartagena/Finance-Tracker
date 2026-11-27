@@ -17,7 +17,7 @@ RUN npm run build
 
 
 # ── Runtime: nginx sirve los estáticos y hace proxy al backend ──
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
 
 ENV BACKEND_URL=http://backend:8000
 
