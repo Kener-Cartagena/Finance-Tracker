@@ -5,3 +5,6 @@ __pycache__/
 # Dependencias y build del frontend (se regeneran con npm install / npm run build)
 node_modules/
 frontend/dist/
+
+# Variables de docker compose (copiar de .env.example)
+/.env

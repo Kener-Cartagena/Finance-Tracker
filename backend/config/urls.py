@@ -11,9 +11,14 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from .health import health
+
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
+
+    # Healthcheck (Docker / CI)
+    path("api/health/", health, name="health"),
 
     # API v1
     path("api/auth/",       include("apps.users.urls")),
