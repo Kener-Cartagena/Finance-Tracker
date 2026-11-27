@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ── Build: compila las wheels (mysqlclient necesita compilador y headers) ──
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.15-slim-bookworm AS builder
 
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -16,7 +16,7 @@ RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
 
 # ── Runtime: imagen final sin toolchain ──
-FROM python:3.11-slim-bookworm
+FROM python:3.15-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
