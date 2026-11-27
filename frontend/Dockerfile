@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ── Build: compila la SPA con Vite ──
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -17,7 +17,7 @@ RUN npm run build
 
 
 # ── Runtime: nginx sirve los estáticos y hace proxy al backend ──
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
 
 ENV BACKEND_URL=http://backend:8000
 
